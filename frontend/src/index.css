@@ -1,0 +1,61 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --grid-color: rgba(0, 229, 255, 0.04);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: #03040a;
+  color: #c8d0f0;
+  font-family: 'DM Sans', sans-serif;
+  overflow-x: hidden;
+}
+
+/* Subtle grid background */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(var(--grid-color) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+#root { position: relative; z-index: 1; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: #0a0c14; }
+::-webkit-scrollbar-thumb { background: #1a1f35; border-radius: 2px; }
+
+/* Glassmorphism utility */
+.glass {
+  background: rgba(14, 16, 32, 0.7);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(26, 31, 53, 0.8);
+}
+
+.glow-accent { box-shadow: 0 0 20px rgba(0, 229, 255, 0.15); }
+.glow-green  { box-shadow: 0 0 20px rgba(0, 255, 136, 0.15); }
+.glow-red    { box-shadow: 0 0 20px rgba(255, 61, 90, 0.15); }
+
+/* Scan line animation for video feed */
+@keyframes scanline {
+  0%   { transform: translateY(-100%); }
+  100% { transform: translateY(100vh); }
+}
+.scanline::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(transparent 50%, rgba(0,229,255,0.02) 50%);
+  background-size: 100% 4px;
+  pointer-events: none;
+}
