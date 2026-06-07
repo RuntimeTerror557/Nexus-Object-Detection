@@ -1,7 +1,8 @@
 flask
 flask-cors
-opencv-python
+opencv-python-headless
 ultralytics
 deep-sort-realtime
 numpy
 pillow
+gunicorn
