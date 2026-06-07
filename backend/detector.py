@@ -1,14 +1,8 @@
 """
-detector.py
------------
-YOLOv8 object detection module.
-Loads the pretrained model and performs inference on video frames.
+detector.py - Lazy-loading YOLOv8 to save startup memory
 """
-
-from ultralytics import YOLO
 import numpy as np
 
-# COCO class names supported by YOLOv8
 COCO_CLASSES = [
     "person", "bicycle", "car", "motorcycle", "airplane", "bus", "train",
     "truck", "boat", "traffic light", "fire hydrant", "stop sign",
@@ -26,38 +20,28 @@ COCO_CLASSES = [
 ]
 
 class ObjectDetector:
-    """
-    Wraps YOLOv8 inference.
-    Returns bounding boxes, class names and confidence scores per frame.
-    """
-
-    def __init__(self, model_name: str = "yolov8n.pt", confidence_threshold: float = 0.4):
-        # Load pretrained YOLOv8 nano model (downloads automatically on first run)
-        self.model = YOLO(model_name)
+    def __init__(self, model_name="yolov8n.pt", confidence_threshold=0.4):
+        self.model_name = model_name
         self.confidence_threshold = confidence_threshold
-        self.class_filter = None  # None = detect all classes
+        self.class_filter = None
+        self._model = None  # lazy load
 
-    def set_confidence_threshold(self, threshold: float):
-        """Dynamically update confidence threshold."""
+    def _get_model(self):
+        """Load model only when first detection is requested."""
+        if self._model is None:
+            from ultralytics import YOLO
+            self._model = YOLO(self.model_name)
+        return self._model
+
+    def set_confidence_threshold(self, threshold):
         self.confidence_threshold = max(0.1, min(0.99, threshold))
 
-    def set_class_filter(self, classes: list):
-        """Filter to only detect specific classes. Pass None to detect all."""
+    def set_class_filter(self, classes):
         self.class_filter = classes if classes else None
 
     def detect(self, frame: np.ndarray) -> list:
-        """
-        Run YOLOv8 inference on a single BGR frame.
-
-        Returns a list of dicts:
-            {
-                'bbox':       [x1, y1, x2, y2],  # pixel coords
-                'class_name': str,
-                'class_id':   int,
-                'confidence': float (0-1)
-            }
-        """
-        results = self.model(frame, verbose=False)[0]
+        model = self._get_model()
+        results = model(frame, verbose=False)[0]
         detections = []
 
         for box in results.boxes:
@@ -68,12 +52,10 @@ class ObjectDetector:
             class_id = int(box.cls[0])
             class_name = COCO_CLASSES[class_id] if class_id < len(COCO_CLASSES) else "unknown"
 
-            # Apply optional class filter
             if self.class_filter and class_name not in self.class_filter:
                 continue
 
             x1, y1, x2, y2 = map(int, box.xyxy[0].tolist())
-
             detections.append({
                 "bbox": [x1, y1, x2, y2],
                 "class_name": class_name,
